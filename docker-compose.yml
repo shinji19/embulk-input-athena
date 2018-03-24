@@ -1,0 +1,10 @@
+version: '3'
+services:
+  embulk:
+    build: .
+    environment:
+      - TZ=Asia/Tokyo
+    working_dir: /root/embulk-input-athena
+    volumes:
+      - ./:/root/embulk-input-athena
+    command: tail -f /dev/null
