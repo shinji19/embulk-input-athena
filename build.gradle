@@ -8,6 +8,8 @@ import com.github.jrubygradle.JRubyExec
 repositories {
     mavenCentral()
     jcenter()
+    // for athena jdbc
+    maven { url "https://maven.atlassian.com/repository/public" }
 }
 configurations {
     provided
@@ -21,7 +23,9 @@ targetCompatibility = 1.8
 dependencies {
     compile  "org.embulk:embulk-core:0.9.4"
     provided "org.embulk:embulk-core:0.9.4"
-    // compile "YOUR_JAR_DEPENDENCY_GROUP:YOUR_JAR_DEPENDENCY_MODULE:YOUR_JAR_DEPENDENCY_VERSION"
+    // https://mvnrepository.com/artifact/com.amazonaws.athena.jdbc/AthenaJDBC41
+    compile group: 'com.amazonaws.athena.jdbc', name: 'AthenaJDBC41', version: '1.0.1-atlassian-hosted'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.301'
     testCompile "junit:junit:4.+"
 }
 

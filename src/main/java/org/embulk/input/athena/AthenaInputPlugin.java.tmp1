@@ -3,38 +3,37 @@ package org.embulk.input.athena;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
 
+import com.google.common.base.Optional;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.Column;
+import org.embulk.input.jdbc.AbstractJdbcInputPlugin;
+import org.embulk.input.jdbc.JdbcInputConnection;
 import org.embulk.spi.Exec;
 import org.embulk.spi.InputPlugin;
-import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.type.Types;
+import org.embulk.spi.SchemaConfig;
 
 public class AthenaInputPlugin
-        implements InputPlugin
+        extends AbstractJdbcInputPlugin
 {
-    public interface PluginTask
-            extends Task
+    public interface AthenaPluginTask
+            extends AbstractJdbcInputPlugin.PluginTask
     {
-        // database (required string)
-        @Config("database")
-        public String getDatabase();
+        @Config("driver_path")
+        @ConfigDefault("null")
+        public Optional<String> getDriverPath();
 
         // athena_url (required string)
         @Config("athena_url")
@@ -52,15 +51,6 @@ public class AthenaInputPlugin
         @Config("secret_key")
         public String getSecretKey();
 
-        // query (required string)
-        @Config("query")
-        public String getQuery();
-
-        // interval (required int)
-        @Config("check_interval")
-        @ConfigDefault("1000")
-        public int getCheckInterval();
-
         // configuration option 2 (optional string, null is not allowed)
         // @Config("option2")
         // @ConfigDefault("\"myvalue\"")
@@ -74,11 +64,37 @@ public class AthenaInputPlugin
         // if you get schema from config
         // @Config("columns")
         // public SchemaConfig getColumns();
-
-        @ConfigInject
-        BufferAllocator getBufferAllocator();
     }
 
+    @Override
+    protected Class<? extends PluginTask> getTaskClass() {
+        return AthenaPluginTask.class;
+    }
+
+    @Override
+    protected AthenaInputConnection newConnection(PluginTask pluginTask) throws SQLException {
+        AthenaPluginTask task = (AthenaPluginTask) pluginTask;
+        loadDriver("com.amazonaws.athena.jdbc.AthenaDriver", task.getDriverPath());
+        //Class.forName("com.amazonaws.athena.jdbc.AthenaDriver");
+        Properties properties = new Properties();
+        properties.put("s3_staging_dir", task.getS3StagingDir());
+        properties.put("user", task.getAccessKey());
+        properties.put("password", task.getSecretKey());
+        properties.putAll(task.getOptions());
+
+        Connection connection = DriverManager.getConnection(task.getAthenaUrl(), properties);
+        try {
+            AthenaInputConnection c = new AthenaInputConnection(connection);
+            connection = null;
+            return c;
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
+    }
+
+/*
     @Override
     public ConfigDiff transaction(ConfigSource config,
             InputPlugin.Control control)
@@ -113,17 +129,8 @@ public class AthenaInputPlugin
             Schema schema, int taskIndex,
             PageOutput output)
     {
-        Schema s = Schema.builder()
-            .add("created_at", Types.STRING)
-            .add("uid", Types.STRING)
-            .add("logtype", Types.STRING)
-            .add("device_os", Types.STRING)
-            .build();
-
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        BufferAllocator allocator = task.getBufferAllocator();
-        PageBuilder pageBuilder = new PageBuilder(allocator, s, output);
-
+        
         // Write your code here :)
 
         Connection connection = null;
@@ -131,24 +138,12 @@ public class AthenaInputPlugin
         try {
             connection = getAthenaConnection(task);
             statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(task.getQuery());
+            ResultSet resultSet = statement.executeQuery("select * from default.sample");
 
-            ResultSetMetaData m = resultSet.getMetaData();
             while(resultSet.next()){
-                for (int i = 0; i < m.getColumnCount(); i++){
-                    String colName = m.getColumnName(i + 1);
-                    String className = m.getColumnClassName(i + 1);
-                    System.out.println(colName + ":" + className + ":" + resultSet.getString(colName));
-                    
-                    Column c = s.getColumn(i);
-                    System.out.println(c.getIndex() + ":" + c.getName());
-                    pageBuilder.setString(c, resultSet.getString(colName));
-                }
-                pageBuilder.addRecord();
+                String statusCode = resultSet.getString("created_at");
+                System.out.println("st code" + statusCode);
             }
-            pageBuilder.finish();
-            
-            pageBuilder.close();
             resultSet.close();
             connection.close();
         } catch (Exception e){
@@ -176,14 +171,22 @@ public class AthenaInputPlugin
     {
         return Exec.newConfigDiff();
     }
-
+*/
+/*
     protected Connection getAthenaConnection(PluginTask task) throws ClassNotFoundException, SQLException{
         Class.forName("com.amazonaws.athena.jdbc.AthenaDriver");
         Properties properties = new Properties();
         properties.put("s3_staging_dir", task.getS3StagingDir());
         properties.put("user", task.getAccessKey());
         properties.put("password", task.getSecretKey());
+        if (task.getLogPath() != null){
+            properties.put("log_path", task.getLogPath());
+        }
+        if (task.getLogLevel() != null){
+            properties.put("log_level", task.getLogLevel());
+        }
 
         return DriverManager.getConnection(task.getAthenaUrl(), properties);
     }
+    */
 }

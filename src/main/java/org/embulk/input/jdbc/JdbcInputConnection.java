@@ -46,7 +46,9 @@ public class JdbcInputConnection
         if (schemaName != null) {
             setSearchPath(schemaName);
         }
-        connection.setAutoCommit(false);
+
+        // java.sql.SQLFeatureNotSupportedException: Disabling auto-commit mode not supported
+        // connection.setAutoCommit(false);
     }
 
     protected void setSearchPath(String schema) throws SQLException
