@@ -19,18 +19,21 @@ import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Column;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.Exec;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.Types;
 
 public class AthenaInputPlugin
         implements InputPlugin
 {
     public interface PluginTask
-            extends Task
+            extends Task, TimestampParser.Task
     {
         // database (required string)
         @Config("database")
@@ -75,6 +78,10 @@ public class AthenaInputPlugin
         // @Config("columns")
         // public SchemaConfig getColumns();
 
+        @Config("columns")
+        @ConfigDefault("[]")
+        public List<ColumnOption> getColumns();
+
         @ConfigInject
         BufferAllocator getBufferAllocator();
     }
@@ -88,6 +95,13 @@ public class AthenaInputPlugin
         // Schema schema = task.getColumns().toSchema();
         Schema schema = Schema.builder().build();
         int taskCount = 1;  // number of run() method calls
+
+        schema = Schema.builder()
+            .add("created_at", Types.STRING)
+            .add("uid", Types.STRING)
+            .add("logtype", Types.STRING)
+            .add("device_os", Types.STRING)
+            .build();
 
         return resume(task.dump(), schema, taskCount, control);
     }
@@ -113,16 +127,9 @@ public class AthenaInputPlugin
             Schema schema, int taskIndex,
             PageOutput output)
     {
-        Schema s = Schema.builder()
-            .add("created_at", Types.STRING)
-            .add("uid", Types.STRING)
-            .add("logtype", Types.STRING)
-            .add("device_os", Types.STRING)
-            .build();
-
         PluginTask task = taskSource.loadTask(PluginTask.class);
         BufferAllocator allocator = task.getBufferAllocator();
-        PageBuilder pageBuilder = new PageBuilder(allocator, s, output);
+        PageBuilder pageBuilder = new PageBuilder(allocator, schema, output);
 
         // Write your code here :)
 
@@ -137,16 +144,72 @@ public class AthenaInputPlugin
             while(resultSet.next()){
                 for (int i = 0; i < m.getColumnCount(); i++){
                     String colName = m.getColumnName(i + 1);
-                    String className = m.getColumnClassName(i + 1);
-                    System.out.println(colName + ":" + className + ":" + resultSet.getString(colName));
+                    // String className = m.getColumnClassName(i + 1);
+
+                    schema.visitColumns(new ColumnVisitor(){
+                        @Override
+                        public void timestampColumn(Column column){
+                            try {
+                                TimestampParser parser = TimestampParser.of(task, task.getColumns().get(column.getIndex()));
+                                Timestamp t = parser.parse(resultSet.getString(colName));
+    							pageBuilder.setTimestamp(column, t);
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+						public void stringColumn(Column column) {
+                            try {
+    							pageBuilder.setString(column, resultSet.getString(colName));
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+						}
+
+						@Override
+						public void longColumn(Column column) {
+                            try {
+    							pageBuilder.setLong(column, resultSet.getLong(colName));
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+						}
+
+						@Override
+						public void doubleColumn(Column column) {
+                            try {
+    							pageBuilder.setDouble(column, resultSet.getDouble(colName));
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+						}
+
+						@Override
+						public void booleanColumn(Column column) {
+                            try {
+    							pageBuilder.setBoolean(column, resultSet.getBoolean(colName));
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        
+                        @Override
+                        public void jsonColumn(Column column) {
+                            // TODO:
+                        }
+                    });
                     
-                    Column c = s.getColumn(i);
-                    System.out.println(c.getIndex() + ":" + c.getName());
-                    pageBuilder.setString(c, resultSet.getString(colName));
+                    //Column c = schema.getColumn(i);
+                    //pageBuilder.setString(c, resultSet.getString(colName));
+                    pageBuilder.flush();
+
                 }
                 pageBuilder.addRecord();
+                pageBuilder.flush();
             }
             pageBuilder.finish();
+            pageBuilder.flush();
             
             pageBuilder.close();
             resultSet.close();
@@ -185,5 +248,9 @@ public class AthenaInputPlugin
         properties.put("password", task.getSecretKey());
 
         return DriverManager.getConnection(task.getAthenaUrl(), properties);
+    }
+
+    interface ColumnOption extends Task, TimestampParser.TimestampColumnOption
+    {
     }
 }
