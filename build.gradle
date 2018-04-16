@@ -16,7 +16,7 @@ configurations {
     provided
 }
 
-version = "0.1.0"
+version = "0.1.1"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -25,8 +25,9 @@ dependencies {
     compile  "org.embulk:embulk-core:0.8.39"
     provided "org.embulk:embulk-core:0.8.39"
     // https://mvnrepository.com/artifact/com.amazonaws.athena.jdbc/AthenaJDBC41
-    // compile group: 'com.amazonaws.athena.jdbc', name: 'AthenaJDBC41', version: '1.0.1-atlassian-hosted'
-    compile files ('build/AthenaJDBC41-1.1.0.jar')
+    // TODO: update jdbc
+    compile group: 'com.amazonaws.athena.jdbc', name: 'AthenaJDBC41', version: '1.0.1-atlassian-hosted'
+    //compile files ('build/AthenaJDBC41-1.1.0.jar')
     compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.301'
     compile 'org.embulk.input.jdbc:embulk-input-jdbc:0.9.1'
     testCompile "junit:junit:4.+"
@@ -35,7 +36,7 @@ dependencies {
 task classpath(type: Copy, dependsOn: ["jar"]) {
     doFirst { file("classpath").deleteDir() }
     from (configurations.runtime - configurations.provided + files(jar.archivePath))
-    from ("build/AthenaJDBC41-1.1.0.jar'")
+    // from ("build/AthenaJDBC41-1.1.0.jar'")
     into "classpath"
 }
 clean { delete "classpath" }

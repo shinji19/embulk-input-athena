@@ -10,4 +10,5 @@ build/
 /.metadata/
 .classpath
 .project
-bin
+bin/
+.vscode/
