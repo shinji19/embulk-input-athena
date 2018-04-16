@@ -88,7 +88,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %[Athena input plugin for Embulk]
   spec.description   = %[Loads records from Athena.]
   spec.email         = [""]
-  spec.licenses      = ["Apache 2.0"]
+  spec.licenses      = ["MIT"]
   spec.homepage      = "https://github.com/shinji19/embulk-input-athena"
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
