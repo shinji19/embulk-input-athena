@@ -21,10 +21,11 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile  "org.embulk:embulk-core:0.9.4"
-    provided "org.embulk:embulk-core:0.9.4"
+    compile  "org.embulk:embulk-core:0.8.39"
+    provided "org.embulk:embulk-core:0.8.39"
     // https://mvnrepository.com/artifact/com.amazonaws.athena.jdbc/AthenaJDBC41
-    compile group: 'com.amazonaws.athena.jdbc', name: 'AthenaJDBC41', version: '1.0.1-atlassian-hosted'
+    // compile group: 'com.amazonaws.athena.jdbc', name: 'AthenaJDBC41', version: '1.0.1-atlassian-hosted'
+    compile files ('build/AthenaJDBC41-1.1.0.jar')
     compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.301'
     testCompile "junit:junit:4.+"
 }
@@ -32,6 +33,7 @@ dependencies {
 task classpath(type: Copy, dependsOn: ["jar"]) {
     doFirst { file("classpath").deleteDir() }
     from (configurations.runtime - configurations.provided + files(jar.archivePath))
+    from ("build/AthenaJDBC41-1.1.0.jar'")
     into "classpath"
 }
 clean { delete "classpath" }
@@ -79,12 +81,12 @@ task gemspec {
 Gem::Specification.new do |spec|
   spec.name          = "${project.name}"
   spec.version       = "${project.version}"
-  spec.authors       = [""]
+  spec.authors       = ["shinji19"]
   spec.summary       = %[Athena input plugin for Embulk]
   spec.description   = %[Loads records from Athena.]
   spec.email         = [""]
-  spec.licenses      = ["MIT"]
-  # TODO set this: spec.homepage      = "https://github.com//embulk-input-athena"
+  spec.licenses      = ["Apache 2.0"]
+  spec.homepage      = "https://github.com/shinji19/embulk-input-athena"
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
   spec.test_files    = spec.files.grep(%r"^(test|spec)/")
