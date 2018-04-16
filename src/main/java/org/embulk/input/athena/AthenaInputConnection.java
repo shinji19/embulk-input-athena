@@ -17,6 +17,7 @@ public class AthenaInputConnection
             throws SQLException
     {
         super(connection, null);
+        connection.setAutoCommit(true);
     }
 
     @Override
