@@ -10,6 +10,7 @@ repositories {
     jcenter()
     // for athena jdbc
     maven { url "https://maven.atlassian.com/repository/public" }
+    maven { url "https://dl.bintray.com/embulk-input-jdbc/maven" }
 }
 configurations {
     provided
@@ -27,6 +28,7 @@ dependencies {
     // compile group: 'com.amazonaws.athena.jdbc', name: 'AthenaJDBC41', version: '1.0.1-atlassian-hosted'
     compile files ('build/AthenaJDBC41-1.1.0.jar')
     compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.301'
+    compile 'org.embulk.input.jdbc:embulk-input-jdbc:0.9.1'
     testCompile "junit:junit:4.+"
 }
 
