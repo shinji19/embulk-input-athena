@@ -11,9 +11,10 @@ Athena input plugin for Embulk loads records from Athena(AWS).
 
 ## Configuration
 
+* **driver_path**: path to the jar file of the Athena JDBC driver. If not set, the bundled JDBC driver(AthenaJDBC41-1.1.0.jar) will be used. (string)
 * **database**: description (string, required)
 * **athena_url**: description (string, required)
-* **s3_staging_dir**: description (string, required)
+* **s3_staging_dir**: The S3 location to which your query output is written, for example s3://query-results-bucket/folder/. (string, required)
 * **access_key**: description (string, required)
 * **secret_key**: description (string, required)
 * **query**: description (string, required)
@@ -39,7 +40,7 @@ in:
 
 ## Build
 
-```
+```bash
 $ docker-compose up -d
 $ docker-compose exec embulk bash
 embulk>$ ./gradlew gem  # -t to watch change of files and rebuild continuously
