@@ -1,5 +1,11 @@
 # Athena input plugin for Embulk
 
+[![Gem Version](https://badge.fury.io/rb/embulk-input-athena.svg)](https://badge.fury.io/rb/embulk-input-athena)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+
+//TODO:
+https://github.com/dtan4/terraforming
+
 Athena input plugin for Embulk loads records from Athena(AWS).
 
 ## Overview
