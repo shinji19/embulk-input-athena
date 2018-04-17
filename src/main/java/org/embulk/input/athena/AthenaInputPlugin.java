@@ -1,5 +1,7 @@
 package org.embulk.input.athena;
 
+import com.google.common.base.Optional;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.net.MalformedURLException;
@@ -10,13 +12,10 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
-
-import com.google.common.base.Optional;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -41,15 +40,16 @@ import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
 
-public class AthenaInputPlugin implements InputPlugin {
-
+public class AthenaInputPlugin implements InputPlugin
+{
     protected final Logger logger = Exec.getLogger(getClass());
 
-    public interface PluginTask extends Task {
+    public interface PluginTask extends Task
+    {
         @Config("driver_path")
         @ConfigDefault("null")
-        public Optional <String> getDriverPath();
-        
+        public Optional<String> getDriverPath();
+
         // database (required string)
         @Config("database")
         public String getDatabase();
@@ -87,7 +87,8 @@ public class AthenaInputPlugin implements InputPlugin {
     }
 
     @Override
-    public ConfigDiff transaction(ConfigSource config, InputPlugin.Control control) {
+    public ConfigDiff transaction(ConfigSource config, InputPlugin.Control control)
+    {
         PluginTask task = config.loadConfig(PluginTask.class);
 
         Schema schema = task.getColumns().toSchema();
@@ -97,17 +98,20 @@ public class AthenaInputPlugin implements InputPlugin {
     }
 
     @Override
-    public ConfigDiff resume(TaskSource taskSource, Schema schema, int taskCount, InputPlugin.Control control) {
+    public ConfigDiff resume(TaskSource taskSource, Schema schema, int taskCount, InputPlugin.Control control)
+    {
         control.run(taskSource, schema, taskCount);
         return Exec.newConfigDiff();
     }
 
     @Override
-    public void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<TaskReport> successTaskReports) {
+    public void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<TaskReport> successTaskReports)
+    {
     }
 
     @Override
-    public TaskReport run(TaskSource taskSource, Schema schema, int taskIndex, PageOutput output) {
+    public TaskReport run(TaskSource taskSource, Schema schema, int taskIndex, PageOutput output)
+    {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         BufferAllocator allocator = task.getBufferAllocator();
         PageBuilder pageBuilder = new PageBuilder(allocator, schema, output);
@@ -121,57 +125,68 @@ public class AthenaInputPlugin implements InputPlugin {
             statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(task.getQuery());
 
-            ResultSetMetaData m = resultSet.getMetaData();
             while (resultSet.next()) {
-                schema.visitColumns(new ColumnVisitor() {
+                schema.visitColumns(new ColumnVisitor()
+                {
                     @Override
-                    public void timestampColumn(Column column) {
+                    public void timestampColumn(Column column)
+                    {
                         try {
                             java.sql.Timestamp t = resultSet.getTimestamp(column.getName());
                             pageBuilder.setTimestamp(column, Timestamp.ofEpochMilli(t.getTime()));
-                        } catch (SQLException e) {
+                        }
+                        catch (SQLException e) {
                             e.printStackTrace();
                         }
                     }
 
                     @Override
-                    public void stringColumn(Column column) {
+                    public void stringColumn(Column column)
+                    {
                         try {
                             pageBuilder.setString(column, resultSet.getString(column.getName()));
-                        } catch (SQLException e) {
+                        }
+                        catch (SQLException e) {
                             e.printStackTrace();
                         }
                     }
 
                     @Override
-                    public void longColumn(Column column) {
+                    public void longColumn(Column column)
+                    {
                         try {
                             pageBuilder.setLong(column, resultSet.getLong(column.getName()));
-                        } catch (SQLException e) {
+                        }
+                        catch (SQLException e) {
                             e.printStackTrace();
                         }
                     }
 
                     @Override
-                    public void doubleColumn(Column column) {
+                    public void doubleColumn(Column column)
+                    {
                         try {
                             pageBuilder.setDouble(column, resultSet.getDouble(column.getName()));
-                        } catch (SQLException e) {
+                        }
+                        catch (SQLException e) {
                             e.printStackTrace();
                         }
                     }
 
                     @Override
-                    public void booleanColumn(Column column) {
+                    public void booleanColumn(Column column)
+                    {
                         try {
                             pageBuilder.setBoolean(column, resultSet.getBoolean(column.getName()));
-                        } catch (SQLException e) {
+                        }
+                        catch (SQLException e) {
                             e.printStackTrace();
                         }
                     }
 
                     @Override
-                    public void jsonColumn(Column column) {
+                    public void jsonColumn(Column column)
+                    {
                         // TODO:
                     }
                 });
@@ -183,19 +198,23 @@ public class AthenaInputPlugin implements InputPlugin {
             pageBuilder.close();
             resultSet.close();
             connection.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             try {
-                if (statement != null)
+                if (statement != null) {
                     statement.close();
-            } catch (Exception ex) {
-
+                }
             }
+            catch (Exception ex) { }
             try {
-                if (connection != null)
+                if (connection != null) {
                     connection.close();
-            } catch (Exception ex) {
+                }
+            }
+            catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
@@ -204,11 +223,13 @@ public class AthenaInputPlugin implements InputPlugin {
     }
 
     @Override
-    public ConfigDiff guess(ConfigSource config) {
+    public ConfigDiff guess(ConfigSource config)
+    {
         return Exec.newConfigDiff();
     }
 
-    protected Connection getAthenaConnection(PluginTask task) throws ClassNotFoundException, SQLException {
+    protected Connection getAthenaConnection(PluginTask task) throws ClassNotFoundException, SQLException
+    {
         loadDriver("com.amazonaws.athena.jdbc.AthenaDriver", task.getDriverPath());
         Properties properties = new Properties();
         properties.put("s3_staging_dir", task.getS3StagingDir());
@@ -227,23 +248,26 @@ public class AthenaInputPlugin implements InputPlugin {
     {
         if (driverPath.isPresent()) {
             addDriverJarToClasspath(driverPath.get());
-        } else {
+        }
+        else {
             try {
                 // Gradle test task will add JDBC driver to classpath
                 Class.forName(className);
-
-            } catch (ClassNotFoundException ex) {
+            }
+            catch (ClassNotFoundException ex) {
                 File root = findPluginRoot();
                 File driverLib = new File(root, "default_jdbc_driver");
                 File[] files = driverLib.listFiles(new FileFilter() {
                     @Override
-                    public boolean accept(File file) {
+                    public boolean accept(File file)
+                    {
                         return file.isFile() && file.getName().endsWith(".jar");
                     }
                 });
                 if (files == null || files.length == 0) {
                     throw new RuntimeException("Cannot find JDBC driver in '" + root.getAbsolutePath() + "'.");
-                } else {
+                }
+                else {
                     for (File file : files) {
                         logger.info("JDBC Driver = " + file.getAbsolutePath());
                         addDriverJarToClasspath(file.getAbsolutePath());
@@ -255,7 +279,8 @@ public class AthenaInputPlugin implements InputPlugin {
         // Load JDBC Driver
         try {
             Class.forName(className);
-        } catch (ClassNotFoundException ex) {
+        }
+        catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -289,7 +314,8 @@ public class AthenaInputPlugin implements InputPlugin {
                     return folder;
                 }
             }
-        } catch (MalformedURLException | URISyntaxException e) {
+        }
+        catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }

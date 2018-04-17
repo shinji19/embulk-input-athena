@@ -1,3 +1,4 @@
+/*
 package org.embulk.input.athena;
 
 import java.util.List;
@@ -48,3 +49,4 @@ public class AthenaInputConnection
         return new SingleSelect(stmt);
     }
 }
+*/
