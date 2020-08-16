@@ -26,6 +26,7 @@ Athena input plugin for Embulk loads records from Athena(AWS).
 * **query**: description (string, required)
 * **columns**: description (string, required)
 * **options**: description (string, default: {})
+* **null_to_zero**: if true, convert long, double and boolean value from null to zero (boolean, default: false)
 
 ## Example
 
@@ -42,6 +43,7 @@ in:
   columns:
     - {name: uid, type: string}
     - {name: created_at, type: timestamp}
+  null_to_zero: true
 ```
 
 ## Build
