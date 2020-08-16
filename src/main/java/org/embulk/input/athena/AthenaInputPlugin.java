@@ -82,6 +82,10 @@ public class AthenaInputPlugin implements InputPlugin
         @ConfigDefault("{}")
         public ToStringMap getOptions();
 
+        @Config("null_to_zero")
+        @ConfigDefault("false")
+        public boolean getNullToZero();
+
         @ConfigInject
         BufferAllocator getBufferAllocator();
     }
@@ -124,6 +128,7 @@ public class AthenaInputPlugin implements InputPlugin
             connection = getAthenaConnection(task);
             statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(task.getQuery());
+            boolean nullToZero = task.getNullToZero();
 
             while (resultSet.next()) {
                 schema.visitColumns(new ColumnVisitor()
@@ -155,7 +160,13 @@ public class AthenaInputPlugin implements InputPlugin
                     public void longColumn(Column column)
                     {
                         try {
-                            pageBuilder.setLong(column, resultSet.getLong(column.getName()));
+                            long ret = resultSet.getLong(column.getName());
+                            if (resultSet.wasNull() && !nullToZero){
+                                pageBuilder.setNull(column);
+                            }
+                            else {
+                                pageBuilder.setLong(column, ret);
+                            }
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
@@ -166,7 +177,13 @@ public class AthenaInputPlugin implements InputPlugin
                     public void doubleColumn(Column column)
                     {
                         try {
-                            pageBuilder.setDouble(column, resultSet.getDouble(column.getName()));
+                            double ret = resultSet.getDouble(column.getName());
+                            if (resultSet.wasNull() && !nullToZero){
+                                pageBuilder.setNull(column);
+                            }
+                            else {
+                                pageBuilder.setDouble(column, ret);
+                            }
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
@@ -177,7 +194,13 @@ public class AthenaInputPlugin implements InputPlugin
                     public void booleanColumn(Column column)
                     {
                         try {
-                            pageBuilder.setBoolean(column, resultSet.getBoolean(column.getName()));
+                            boolean ret = resultSet.getBoolean(column.getName());
+                            if (resultSet.wasNull() && !nullToZero){
+                                pageBuilder.setNull(column);
+                            }
+                            else {
+                                pageBuilder.setBoolean(column, ret);
+                            }
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
