@@ -142,6 +142,7 @@ public class AthenaInputPlugin implements InputPlugin
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
+                            throw new RuntimeException(e);
                         }
                     }
 
@@ -153,6 +154,7 @@ public class AthenaInputPlugin implements InputPlugin
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
+                            throw new RuntimeException(e);
                         }
                     }
 
@@ -170,6 +172,7 @@ public class AthenaInputPlugin implements InputPlugin
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
+                            throw new RuntimeException(e);
                         }
                     }
 
@@ -187,6 +190,7 @@ public class AthenaInputPlugin implements InputPlugin
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
+                            throw new RuntimeException(e);
                         }
                     }
 
@@ -204,6 +208,7 @@ public class AthenaInputPlugin implements InputPlugin
                         }
                         catch (SQLException e) {
                             e.printStackTrace();
+                            throw new RuntimeException(e);
                         }
                     }
 
@@ -224,6 +229,7 @@ public class AthenaInputPlugin implements InputPlugin
         }
         catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
         finally {
             try {
