@@ -259,7 +259,7 @@ public class AthenaInputPlugin implements InputPlugin
 
     protected Connection getAthenaConnection(PluginTask task) throws ClassNotFoundException, SQLException
     {
-        loadDriver("com.amazonaws.athena.jdbc.AthenaDriver", task.getDriverPath());
+        loadDriver("com.simba.athena.jdbc.Driver", task.getDriverPath());
         Properties properties = new Properties();
         properties.put("s3_staging_dir", task.getS3StagingDir());
         properties.put("user", task.getAccessKey());
