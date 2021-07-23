@@ -264,6 +264,7 @@ public class AthenaInputPlugin implements InputPlugin
         properties.put("s3_staging_dir", task.getS3StagingDir());
         properties.put("user", task.getAccessKey());
         properties.put("password", task.getSecretKey());
+        properties.put("schema", task.getDatabase());
         properties.putAll(task.getOptions());
 
         return DriverManager.getConnection(task.getAthenaUrl(), properties);
