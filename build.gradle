@@ -9,8 +9,6 @@ plugins {
 import com.github.jrubygradle.JRubyExec
 repositories {
     mavenCentral()
-    jcenter()
-    maven { url "https://dl.bintray.com/embulk-input-jdbc/maven" }
 }
 configurations {
     provided
@@ -28,7 +26,7 @@ dependencies {
     compile files ('build/AthenaJDBC41-1.1.0.jar')
     compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.301'
     // compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.11.301'
-    compile 'org.embulk.input.jdbc:embulk-input-jdbc:0.9.1'
+    compile 'org.embulk:embulk-input-jdbc:0.12.2'
     testCompile "junit:junit:4.+"
 }
 
